@@ -1,0 +1,29 @@
+get decks
+create decks
+    /{userId}/decks
+
+get cards
+create cards
+    /{userId}/decks/{deckId}/cards
+
+get settings
+update settings
+    /{userId}/decks/{deckId}/practice-settings
+
+update decks
+delete decks
+    /{userId}/decks/{deckId}
+
+update cards
+delete cards
+    /{userId}/decks/{deckId}/cards/{cardId}
+
+delete user
+    /{userId}
+
+create decks
+    /{userId}/decks
+
+registration and login (POST)
+    /register
+    /sign-in

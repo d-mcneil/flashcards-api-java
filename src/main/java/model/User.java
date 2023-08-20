@@ -3,7 +3,7 @@ package model;
 import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class User {
     private int userId;
@@ -19,8 +19,7 @@ public class User {
     @NotNull
     @Length(max = 127)
     private String email;
-    @NotNull
-    private LocalDateTime joinedDate;
+    private Timestamp joinedDate;
     @NotNull
     private boolean isUserActive;
 
@@ -44,7 +43,7 @@ public class User {
         return email;
     }
 
-    public LocalDateTime getJoinedDate() {
+    public Timestamp getJoinedDate() {
         return joinedDate;
     }
 

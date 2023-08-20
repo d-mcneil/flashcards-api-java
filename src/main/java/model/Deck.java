@@ -3,8 +3,7 @@ package model;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class Deck {
     private long deckId;
@@ -15,8 +14,7 @@ public class Deck {
     private String deckName;
     @NotNull
     private String deckDescription;
-    @NotNull
-    private LocalDateTime deckCreatedDate;
+    private Timestamp deckCreatedDate;
     @NotNull
     private boolean isDeckPublic;
     @NotNull
@@ -38,7 +36,7 @@ public class Deck {
         return deckDescription;
     }
 
-    public LocalDateTime getDeckCreatedDate() {
+    public Timestamp getDeckCreatedDate() {
         return deckCreatedDate;
     }
 
@@ -48,5 +46,33 @@ public class Deck {
 
     public boolean isDeckDeleted() {
         return isDeckDeleted;
+    }
+
+    public void setDeckId(long deckId) {
+        this.deckId = deckId;
+    }
+
+    public void setOwnerUserId(int ownerUserId) {
+        this.ownerUserId = ownerUserId;
+    }
+
+    public void setDeckName(String deckName) {
+        this.deckName = deckName;
+    }
+
+    public void setDeckDescription(String deckDescription) {
+        this.deckDescription = deckDescription;
+    }
+
+    public void setDeckCreatedDate(Timestamp deckCreatedDate) {
+        this.deckCreatedDate = deckCreatedDate;
+    }
+
+    public void setDeckPublic(boolean deckPublic) {
+        isDeckPublic = deckPublic;
+    }
+
+    public void setDeckDeleted(boolean deckDeleted) {
+        isDeckDeleted = deckDeleted;
     }
 }
