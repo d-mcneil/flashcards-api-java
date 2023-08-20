@@ -55,6 +55,7 @@ CREATE TABLE users_deck_practice_settings (
 		-- If the language/voice name isn't present, use the language code.
 		-- If the language code isn't present, default to US English.
 	should_read_out_on_flip BOOLEAN NOT NULL DEFAULT FALSE,
+	should_read_out_on_next_card BOOLEAN NOT NULL DEFAULT FALSE,
 	CONSTRAINT PK_users_deck_practice_settings PRIMARY KEY (user_id, deck_id),
 	CONSTRAINT FK_users_deck_practice_settings_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
 	CONSTRAINT FK_users_deck_practice_settings_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
