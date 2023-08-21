@@ -39,42 +39,40 @@ CREATE TABLE card (
 	CONSTRAINT FK_card_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE
 );
 
-CREATE TABLE users_deck_practice_settings (
-	-- Users can add decks that they aren't owners of to their collection in order to practice them.
-	-- Each user can choose their own settings for practicing a deck whether or not they are the owner of the deck.
-	user_id INTEGER,
-	deck_id BIGINT,
+CREATE TABLE deck_users (
+    -- For relationships between decks and users
+        -- when a user is the owner of a deck
+        -- OR
+        -- when A USER THAT IS NOT THE OWNER OF A DECK has added that deck to their collection
+            -- The use case for this is if a user wants to practice somebody else's deck and keep up with the changes they make to that deck.
+            -- They would do this as an alternative to making themself a copy of the deck and becoming the owner of the new, copied deck.
+            -- A user that is not the owner of a deck cannot make changes to the deck, but they do have their own practice settings for the deck.
+    deck_id BIGINT,
+    user_id INTEGER,
+    settings_id BIGSERIAL,
+    CONSTRAINT PK_deck_users PRIMARY KEY (deck_id, user_id),
+    CONSTRAINT FK_deck_users_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
+    CONSTRAINT FK_deck_users_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    CONSTRAINT FK_deck_users_practice_settings FOREIGN KEY (settings_id) REFERENCES practice_settings (settings_id) ON DELETE CASCADE
+);
+
+-- Each user can choose their own settings for practicing a deck whether or not they are the owner of the deck.
+CREATE TABLE practice_settings (
+    settings_id BIGSERIAL,
 	is_definition_first BOOLEAN NOT NULL DEFAULT FALSE,
 	practice_deck_percentage SMALLINT NOT NULL DEFAULT 100,
 	term_language_code CHAR(5) NOT NULL DEFAULT 'en-US',
 	definition_language_code CHAR(5) NOT NULL DEFAULT 'en-US',
 	term_language_name VARCHAR(255) NOT NULL DEFAULT 'Google US English',
 	definition_language_name VARCHAR(255) NOT NULL DEFAULT 'Google US English',
-		-- How choosing the language/voice works across browsers.
-		-- If the language/voice name is present, use it.
-		-- If the language/voice name isn't present, use the language code.
-		-- If the language code isn't present, default to US English.
+    -- How choosing the language/voice works across browsers.
+        -- If the language/voice name is present, use it.
+        -- If the language/voice name isn't present, use the language code.
+        -- If the language code isn't present, default to US English.
 	should_read_out_on_flip BOOLEAN NOT NULL DEFAULT FALSE,
 	should_read_out_on_next_card BOOLEAN NOT NULL DEFAULT FALSE,
-	CONSTRAINT PK_users_deck_practice_settings PRIMARY KEY (user_id, deck_id),
-	CONSTRAINT FK_users_deck_practice_settings_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
-	CONSTRAINT FK_users_deck_practice_settings_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+	CONSTRAINT PK_practice_settings PRIMARY KEY (settings_id),
 	CONSTRAINT CHK_practice_deck_percentage CHECK (practice_deck_percentage BETWEEN 1 AND 100),
 	CONSTRAINT CHK_term_language_code CHECK (term_language_code ~* '[a-z]{2}-[A-Z]{2}'),
 	CONSTRAINT CHK_definition_language_code CHECK (definition_language_code ~* '[a-z]{2}-[A-Z]{2}')
 );
-
--- **************************************************************************************************************************************************************
--- I ended up realizing that this table wasn't really necessary, because it was all covered in the practice settings table, but I wanted to keep it just in case.
--- **************************************************************************************************************************************************************
--- CREATE TABLE deck_users ( -- ASSOCIATIVE TABLE
--- 	-- For relationships between decks and users when A USER THAT IS NOT THE OWNER OF A DECK has added that deck to their collection.
--- 	-- The use case for this is if a user wants to practice somebody else's deck and keep up with the changes they make to that deck.
--- 	-- They would do this as an alternative to making themself a copy of the deck and becoming the owner of the new, copied deck.
--- 	-- A user that is not the owner of a deck cannot make changes to the deck.
--- 	deck_id BIGINT,
--- 	non_owner_user_id INTEGER,
--- 	CONSTRAINT PK_deck_users PRIMARY KEY (deck_id, non_owner_user_id),
--- 	CONSTRAINT FK_deck_users_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
--- 	CONSTRAINT FK_deck_users_user FOREIGN KEY (non_owner_user_id) REFERENCES users (user_id) ON DELETE CASCADE
--- );
