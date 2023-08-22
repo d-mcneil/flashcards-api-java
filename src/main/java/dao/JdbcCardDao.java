@@ -14,7 +14,7 @@ import java.util.List;
 @Component
 public class JdbcCardDao implements CardDao {
 
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     public JdbcCardDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -53,12 +53,12 @@ public class JdbcCardDao implements CardDao {
     }
 
     public Card updateCard(Card card) {
-        Card updatedCard = null;
-        String sql = "UPDATE card (card_id, deck_id, card_term, card_definition, card_score, card_created_date, is_card_deleted) " +
-                "SET card_id = ?, deck_id = ?, card_term = ?, card_definition = ?, card_score = ?, card_created_date = ?, is_card_deleted = ? " +
+        Card updatedCard;
+        String sql = "UPDATE card (card_term, card_definition, card_score) " +
+                "SET card_term = ?, card_definition = ?, card_score = ? " +
                 "WHERE card_id = ? AND is_card_deleted = false;";
         try {
-            int rowsAffected = jdbcTemplate.update(sql, card.getCardId(), card.getDeckId(), card.getCardTerm(), card.getCardDefinition(), card.getCardScore(), card.getCardCreatedDate(), card.isCardDeleted(), card.getCardId());
+            int rowsAffected = jdbcTemplate.update(sql, card.getCardTerm(), card.getCardDefinition(), card.getCardScore(), card.getCardId());
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected one.");
             }
@@ -74,6 +74,7 @@ public class JdbcCardDao implements CardDao {
     public int deleteCardById(long cardId) {
         int rowsDeleted = 0;
         String sql = "DELETE FROM card WHERE card_id = ?;";
+        // String sql = "UPDATE card SET is_card_deleted = true WHERE card_id = ?"; // This would be the SQL String if I were to use a boolean to "delete" cards instead of actually deleting them.
         try {
             rowsDeleted = jdbcTemplate.update(sql, cardId);
         } catch (CannotGetJdbcConnectionException e) {

@@ -6,17 +6,23 @@ import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
 public class Card {
+
     private long cardId;
+
     @NotNull
     private long deckId;
+
     @NotNull
     @Length(max = 511)
     private String cardTerm;
+
     @NotNull
     private String cardDefinition;
+
     @NotNull
     private int cardScore;
     private Timestamp cardCreatedDate;
+
     @NotNull
     private boolean isCardDeleted;
 

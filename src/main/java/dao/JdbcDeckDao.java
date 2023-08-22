@@ -54,12 +54,12 @@ public class JdbcDeckDao implements DeckDao {
     }
 
     public Deck updateDeck(Deck deck) {
-        Deck updatedDeck = null;
-        String sql = "UPDATE deck (deck_id, owner_user_id, deck_name, deck_description, deck_created_date, is_deck_public, is_deck_deleted) " +
-                "SET deck_id = ?, owner_user_id = ?, deck_name = ?, deck_description = ?, deck_created_date = ?, is_deck_public = ?, is_deck_deleted = ? " +
+        Deck updatedDeck;
+        String sql = "UPDATE deck (deck_name, deck_description, is_deck_public) " +
+                "SET deck_name = ?, deck_description = ?, is_deck_public = ? " +
                 "WHERE deck_id = ? AND is_deck_deleted = false";
         try {
-            int rowsAffected = jdbcTemplate.update(sql, deck.getDeckId(), deck.getOwnerUserId(), deck.getDeckName(), deck.getDeckDescription(), deck.getDeckCreatedDate(), deck.isDeckPublic(), deck.isDeckDeleted(), deck.getDeckId());
+            int rowsAffected = jdbcTemplate.update(sql, deck.getDeckName(), deck.getDeckDescription(), deck.isDeckPublic(), deck.getDeckId());
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected one.");
             }
@@ -75,6 +75,7 @@ public class JdbcDeckDao implements DeckDao {
     public int deleteDeckById(long deckId) {
         int rowsDeleted = 0;
         String sql = "DELETE FROM deck WHERE deck_id = ?;";
+        // String sql = "UPDATE deck SET is_deck_deleted = true WHERE deck_id = ?"; // This would be the SQL String if I were to use a boolean to "delete" decks instead of actually deleting them.
         try {
             rowsDeleted = jdbcTemplate.update(sql, deckId);
         } catch (CannotGetJdbcConnectionException e) {

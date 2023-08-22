@@ -4,38 +4,41 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
-public class UserDeckPracticeSettings {
+public class PracticeSettings {
+
     @NotNull
-    private int userId;
-    @NotNull
-    private long deckId;
+    private long settingsId;
+
     @NotNull
     private boolean isDefinitionFirst;
+
     @NotNull
     private byte practiceDeckPercentage;
+
     @NotNull
     @Length(max = 5, min = 5)
     private String termLanguageCode;
+
     @NotNull
     @Length(max = 5, min = 5)
     private String definitionLanguageCode;
+
     @NotNull
     @Length(max = 255)
     private String termLanguageName;
+
     @NotNull
     @Length(max = 255)
     private String definitionLanguageName;
+
     @NotNull
     private boolean shouldReadOutOnFlip;
+
     @NotNull
     private boolean shouldReadOutOnNextCard;
 
-    public int getUserId() {
-        return userId;
-    }
-
-    public long getDeckId() {
-        return deckId;
+    public long getSettingsId() {
+        return settingsId;
     }
 
     public boolean isDefinitionFirst() {

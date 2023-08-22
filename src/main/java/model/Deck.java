@@ -6,17 +6,24 @@ import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
 public class Deck {
+
     private long deckId;
+
     @NotNull
     private int ownerUserId;
+
     @NotNull
     @Length(max = 511)
     private String deckName;
+
     @NotNull
     private String deckDescription;
+
     private Timestamp deckCreatedDate;
+
     @NotNull
     private boolean isDeckPublic;
+
     @NotNull
     private boolean isDeckDeleted;
 

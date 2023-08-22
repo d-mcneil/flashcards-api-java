@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users_deck_practice_settings, card, deck, users CASCADE;
+DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, users CASCADE;
 
 CREATE TABLE users (
 	user_id SERIAL,
@@ -24,7 +24,7 @@ CREATE TABLE deck (
 	is_deck_deleted BOOLEAN NOT NULL DEFAULT false,
 	CONSTRAINT PK_deck PRIMARY KEY (deck_id),
 	CONSTRAINT FK_deck_user FOREIGN KEY (owner_user_id) REFERENCES users (user_id) ON DELETE CASCADE
-	-- CONSTRAINT FK_deck_user FOREIGN KEY (owner_user_id) REFERENCES user ON DELETE SET NULL (user_id) -- If I want decks that belong to a delete account to persist, then I need to use this line instead.
+	-- CONSTRAINT FK_deck_user FOREIGN KEY (owner_user_id) REFERENCES user ON DELETE SET NULL (user_id) -- If I want decks that belong to a deleted account to persist, then I need to use this line instead.
 );
 
 CREATE TABLE card (
@@ -37,23 +37,6 @@ CREATE TABLE card (
 	is_card_deleted BOOLEAN NOT NULL DEFAULT false,
 	CONSTRAINT PK_card PRIMARY KEY (card_id),
 	CONSTRAINT FK_card_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE
-);
-
-CREATE TABLE deck_users (
-    -- For relationships between decks and users
-        -- when a user is the owner of a deck
-        -- OR
-        -- when A USER THAT IS NOT THE OWNER OF A DECK has added that deck to their collection
-            -- The use case for this is if a user wants to practice somebody else's deck and keep up with the changes they make to that deck.
-            -- They would do this as an alternative to making themself a copy of the deck and becoming the owner of the new, copied deck.
-            -- A user that is not the owner of a deck cannot make changes to the deck, but they do have their own practice settings for the deck.
-    deck_id BIGINT,
-    user_id INTEGER,
-    settings_id BIGSERIAL,
-    CONSTRAINT PK_deck_users PRIMARY KEY (deck_id, user_id),
-    CONSTRAINT FK_deck_users_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
-    CONSTRAINT FK_deck_users_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    CONSTRAINT FK_deck_users_practice_settings FOREIGN KEY (settings_id) REFERENCES practice_settings (settings_id) ON DELETE CASCADE
 );
 
 -- Each user can choose their own settings for practicing a deck whether or not they are the owner of the deck.
@@ -75,4 +58,21 @@ CREATE TABLE practice_settings (
 	CONSTRAINT CHK_practice_deck_percentage CHECK (practice_deck_percentage BETWEEN 1 AND 100),
 	CONSTRAINT CHK_term_language_code CHECK (term_language_code ~* '[a-z]{2}-[A-Z]{2}'),
 	CONSTRAINT CHK_definition_language_code CHECK (definition_language_code ~* '[a-z]{2}-[A-Z]{2}')
+);
+
+CREATE TABLE deck_users (
+    -- For relationships between decks and users
+        -- when a user is the owner of a deck
+        -- OR
+        -- when A USER THAT IS NOT THE OWNER OF A DECK has added that deck to their collection
+            -- The use case for this is if a user wants to practice somebody else's deck and keep up with the changes they make to that deck.
+            -- They would do this as an alternative to making themself a copy of the deck and becoming the owner of the new, copied deck.
+            -- A user that is not the owner of a deck cannot make changes to the deck, but they do have their own practice settings for the deck.
+    deck_id BIGINT,
+    user_id INTEGER,
+    settings_id BIGSERIAL,
+    CONSTRAINT PK_deck_users PRIMARY KEY (deck_id, user_id),
+    CONSTRAINT FK_deck_users_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
+    CONSTRAINT FK_deck_users_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    CONSTRAINT FK_deck_users_practice_settings FOREIGN KEY (settings_id) REFERENCES practice_settings (settings_id) ON DELETE CASCADE
 );
