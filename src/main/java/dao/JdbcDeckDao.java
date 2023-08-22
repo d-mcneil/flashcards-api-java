@@ -20,11 +20,20 @@ public class JdbcDeckDao implements DeckDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
     public List<Deck> getDecks(int userId) {
         List<Deck> decks = new ArrayList<>();
-        String sql = "SELECT deck.deck_id, deck.owner_user_id, deck_name, deck_description, deck_created_date, is_deck_public, is_deck_deleted " +
+        String sql =
+                "SELECT " +
+                        "deck.deck_id, " +
+                        "deck.owner_user_id, " +
+                        "deck_name, " +
+                        "deck_description, " +
+                        "deck_created_date, " +
+                        "is_deck_public, " +
+                        "is_deck_deleted " +
                 "FROM deck " +
-                "JOIN users_deck_practice_settings ON deck.deck_id = users_deck_practice_settings.deck_id " +
+                "JOIN deck_users ON deck.deck_id = deck_users.deck_id " +
                 "WHERE user_id = ? AND is_deck_deleted = false;";
         try {
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, userId);
@@ -37,9 +46,18 @@ public class JdbcDeckDao implements DeckDao {
         return decks;
     }
 
+    @Override
     public Deck getDeckById(long deckId) {
         Deck deck = null;
-        String sql = "SELECT deck_id, owner_user_id, deck_name, deck_description, deck_created_date, is_deck_public, is_deck_deleted " +
+        String sql =
+                "SELECT " +
+                        "deck_id, " +
+                        "owner_user_id, " +
+                        "deck_name, " +
+                        "deck_description, " +
+                        "deck_created_date, " +
+                        "is_deck_public, " +
+                        "is_deck_deleted " +
                 "FROM deck " +
                 "WHERE deck_id = ? AND is_deck_deleted = false;";
         try {
@@ -53,13 +71,20 @@ public class JdbcDeckDao implements DeckDao {
         return deck;
     }
 
+    @Override
     public Deck updateDeck(Deck deck) {
         Deck updatedDeck;
         String sql = "UPDATE deck (deck_name, deck_description, is_deck_public) " +
                 "SET deck_name = ?, deck_description = ?, is_deck_public = ? " +
-                "WHERE deck_id = ? AND is_deck_deleted = false";
+                "WHERE deck_id = ? AND is_deck_deleted = false;";
         try {
-            int rowsAffected = jdbcTemplate.update(sql, deck.getDeckName(), deck.getDeckDescription(), deck.isDeckPublic(), deck.getDeckId());
+            int rowsAffected = jdbcTemplate.update(
+                    sql,
+                    deck.getDeckName(),
+                    deck.getDeckDescription(),
+                    deck.isDeckPublic(),
+                    deck.getDeckId()
+            );
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected one.");
             }
@@ -72,6 +97,7 @@ public class JdbcDeckDao implements DeckDao {
         return updatedDeck;
     }
 
+    @Override
     public int deleteDeckById(long deckId) {
         int rowsDeleted = 0;
         String sql = "DELETE FROM deck WHERE deck_id = ?;";
@@ -84,6 +110,18 @@ public class JdbcDeckDao implements DeckDao {
             throw new DaoException("Data integrity violation", e);
         }
         return rowsDeleted;
+    }
+
+    @Override
+    public void linkDeckUser(long deckId, int userId) {
+        String sql = "INSERT INTO deck_users (deck_id, user_id) VALUES (?, ?);";
+        try {
+            jdbcTemplate.update(sql, deckId, userId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
     }
 
     private Deck mapRowToDeck(SqlRowSet sqlRowSet) {

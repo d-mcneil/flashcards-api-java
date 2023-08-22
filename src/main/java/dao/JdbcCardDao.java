@@ -20,9 +20,18 @@ public class JdbcCardDao implements CardDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
     public List<Card> getCards(long deckId) {
         List<Card> cards = new ArrayList<>();
-        String sql = "SELECT card_id, deck_id, card_term, card_definition, card_score, card_created_date, is_card_deleted " +
+        String sql =
+                "SELECT " +
+                        "card_id, " +
+                        "deck_id, " +
+                        "card_term, " +
+                        "card_definition, " +
+                        "card_score, " +
+                        "card_created_date, " +
+                        "is_card_deleted " +
                 "FROM card " +
                 "WHERE deck_id = ? AND is_card_deleted = false;";
         try {
@@ -36,9 +45,18 @@ public class JdbcCardDao implements CardDao {
         return cards;
     }
 
+    @Override
     public Card getCardById(long cardId) {
         Card card = null;
-        String sql = "SELECT card_id, deck_id, card_term, card_definition, card_score, card_created_date, is_card_deleted " +
+        String sql =
+                "SELECT " +
+                        "card_id, " +
+                        "deck_id, " +
+                        "card_term, " +
+                        "card_definition, " +
+                        "card_score, " +
+                        "card_created_date, " +
+                        "is_card_deleted " +
                 "FROM card " +
                 "WHERE card_id = ? AND is_card_deleted = false;";
         try {
@@ -52,13 +70,20 @@ public class JdbcCardDao implements CardDao {
         return card;
     }
 
+    @Override
     public Card updateCard(Card card) {
         Card updatedCard;
         String sql = "UPDATE card (card_term, card_definition, card_score) " +
                 "SET card_term = ?, card_definition = ?, card_score = ? " +
                 "WHERE card_id = ? AND is_card_deleted = false;";
         try {
-            int rowsAffected = jdbcTemplate.update(sql, card.getCardTerm(), card.getCardDefinition(), card.getCardScore(), card.getCardId());
+            int rowsAffected = jdbcTemplate.update(
+                    sql,
+                    card.getCardTerm(),
+                    card.getCardDefinition(),
+                    card.getCardScore(),
+                    card.getCardId()
+            );
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected one.");
             }
@@ -71,6 +96,7 @@ public class JdbcCardDao implements CardDao {
         return updatedCard;
     }
 
+    @Override
     public int deleteCardById(long cardId) {
         int rowsDeleted = 0;
         String sql = "DELETE FROM card WHERE card_id = ?;";

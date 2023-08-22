@@ -1,9 +1,8 @@
-DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, users CASCADE;
+DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CASCADE;
 
 CREATE TABLE users (
 	user_id SERIAL,
 	username VARCHAR(63) NOT NULL,
-	hashed_password CHAR(60) NOT NULL,
 	first_name VARCHAR(63) NOT NULL,
 	last_name VARCHAR(63) NOT NULL,
 	email VARCHAR(127) NOT NULL,
@@ -11,6 +10,13 @@ CREATE TABLE users (
 	is_user_active BOOLEAN NOT NULL DEFAULT true,
 	CONSTRAINT PK_user PRIMARY KEY (user_id),
 	CONSTRAINT UQ_username UNIQUE (username)
+);
+
+CREATE TABLE login (
+    user_id INTEGER,
+	hashed_password CHAR(60) NOT NULL,
+	CONSTRAINT PK_login PRIMARY KEY (user_id),
+	CONSTRAINT FK_login_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE deck (

@@ -72,4 +72,40 @@ public class PracticeSettings {
     public boolean isShouldReadOutOnNextCard() {
         return shouldReadOutOnNextCard;
     }
+
+    public void setSettingsId(long settingsId) {
+        this.settingsId = settingsId;
+    }
+
+    public void setDefinitionFirst(boolean definitionFirst) {
+        isDefinitionFirst = definitionFirst;
+    }
+
+    public void setPracticeDeckPercentage(byte practiceDeckPercentage) {
+        this.practiceDeckPercentage = practiceDeckPercentage;
+    }
+
+    public void setTermLanguageCode(String termLanguageCode) {
+        this.termLanguageCode = termLanguageCode;
+    }
+
+    public void setDefinitionLanguageCode(String definitionLanguageCode) {
+        this.definitionLanguageCode = definitionLanguageCode;
+    }
+
+    public void setTermLanguageName(String termLanguageName) {
+        this.termLanguageName = termLanguageName;
+    }
+
+    public void setDefinitionLanguageName(String definitionLanguageName) {
+        this.definitionLanguageName = definitionLanguageName;
+    }
+
+    public void setShouldReadOutOnFlip(boolean shouldReadOutOnFlip) {
+        this.shouldReadOutOnFlip = shouldReadOutOnFlip;
+    }
+
+    public void setShouldReadOutOnNextCard(boolean shouldReadOutOnNextCard) {
+        this.shouldReadOutOnNextCard = shouldReadOutOnNextCard;
+    }
 }
