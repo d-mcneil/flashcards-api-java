@@ -1,3 +1,5 @@
+BEGIN TRANSACTION;
+
 DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CASCADE;
 
 CREATE TABLE users (
@@ -82,3 +84,98 @@ CREATE TABLE deck_users (
     CONSTRAINT FK_deck_users_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
     CONSTRAINT FK_deck_users_practice_settings FOREIGN KEY (settings_id) REFERENCES practice_settings (settings_id) ON DELETE CASCADE
 );
+
+
+-- *********************** FUNCTIONS AND TRIGGERS ***************************************************************
+--
+-- **************************************************************************************************************
+-- After a new deck is inserted, a new entry should be put into deck_users that links the new deck and its owner.
+-- This is not redundant data, because users can practice decks that they don't own themselves.
+-- This is kept track of in the deck_users table, and that table also associates practice settings to that
+-- user/deck combination. But, because users (obvviously) can practice decks they own, that link needs to be made
+-- in the deck_users table as well, because that is what is used by the application to grab the list of decks
+-- that are available to practice.
+-- **************************************************************************************************************
+CREATE OR REPLACE FUNCTION function_after_insert_on_deck_insert_into_deck_users()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS 
+$$
+	BEGIN
+		INSERT INTO deck_users (deck_id, user_id)
+		VALUES (NEW.deck_id, NEW.owner_user_id);
+		RETURN NEW;
+	END;
+$$;
+
+CREATE TRIGGER trigger_after_insert_on_deck
+AFTER INSERT ON deck
+FOR EACH ROW
+EXECUTE FUNCTION function_after_insert_on_deck_insert_into_deck_users();
+
+
+-- **************************************************************************************************************
+-- After a record is entered into deck_users (i.e., there is a practice pairing made between a deck and a user, 
+-- whether or not the user is the owner of the deck), a new record should be inserted into the practice_settings
+-- table with the default settings, and then that settings_id needs to be input into the corresponding row in the
+-- deck_users table.
+-- **************************************************************************************************************
+CREATE OR REPLACE FUNCTION function_insert_default_practice_settings()
+RETURNS BIGINT
+LANGUAGE plpgsql AS
+$$
+	DECLARE 
+		new_settings_id BIGINT;
+	BEGIN
+		INSERT INTO practice_settings
+		DEFAULT VALUES
+		RETURNING settings_id
+		INTO new_settings_id;
+		
+		RETURN new_settings_id;
+	END;
+$$;
+
+CREATE OR REPLACE FUNCTION 
+function_after_insert_on_deck_users_insert_default_practice_settings_and_update_deck_users_with_settings_id()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS
+$$
+	BEGIN
+		NEW.settings_id := function_insert_default_practice_settings();
+		RETURN NEW;
+	END;
+$$;
+
+CREATE TRIGGER trigger_after_insert_on_deck_users
+BEFORE INSERT ON deck_users
+FOR EACH ROW
+EXECUTE FUNCTION 
+function_after_insert_on_deck_users_insert_default_practice_settings_and_update_deck_users_with_settings_id();
+
+
+-- **************************************************************************************************************
+-- When an association between a user and a deck is removed (whether it be from deleting a user, deleting a deck,
+-- of a user removing another user's deck from their collection), the practice settings that
+-- correspond to that relation need to be deleted also. Otherwise, there would be data no longer
+-- being used that would persist in the practice_settings table.
+-- **************************************************************************************************************
+CREATE OR REPLACE FUNCTION 
+function_before_delete_deck_users_delete_practice_settings()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS
+$$
+	BEGIN
+		DELETE FROM practice_settings
+		WHERE practice_settings.settings_id = OLD.settings_id;
+		RETURN OLD;
+	END;
+$$;
+
+CREATE TRIGGER trigger_before_delete_deck_users
+AFTER DELETE ON deck_users
+FOR EACH ROW
+EXECUTE FUNCTION 
+function_before_delete_deck_users_delete_practice_settings();
+
+
+COMMIT TRANSACTION;
