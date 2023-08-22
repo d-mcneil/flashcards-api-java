@@ -3,5 +3,7 @@ package dao;
 import model.Login;
 
 public interface LoginDao {
-    public Login getLoginByUserId(int userId);
+    Login getLoginByUserId(int userId);
+
+    Login createLogin(Login login);
 }

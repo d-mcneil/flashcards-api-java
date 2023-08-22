@@ -5,13 +5,17 @@ import model.Deck;
 import java.util.List;
 
 public interface DeckDao {
-    public List<Deck> getDecks(int userId);
+    List<Deck> getDecks(int userId);
 
-    public Deck getDeckById(long deckId);
+    Deck getDeckById(long deckId);
 
-    public Deck updateDeck(Deck deck);
+    Deck createDeck(Deck deck);
 
-    public int deleteDeckById(long deckId);
+    Deck updateDeck(Deck deck);
 
-    public void linkDeckUser(long deckId, int userId);
+    int deleteDeckById(long deckId);
+
+    void linkDeckUser(long deckId, int userId);
+
+    void unlinkDeckUser(long deckId, int userId);
 }

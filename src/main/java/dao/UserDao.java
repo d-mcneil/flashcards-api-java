@@ -3,11 +3,13 @@ package dao;
 import model.User;
 
 public interface UserDao {
-    public int getUserIdByUsername(String username);
+    int getUserIdByUsername(String username);
 
-    public User getUserByUserId(int userId);
+    User getUserByUserId(int userId);
 
-    public User updateUser(User user);
+    User createUser(User user);
 
-    public int deleteUserById(int userId);
+    User updateUser(User user);
+
+    int deleteUserById(int userId);
 }

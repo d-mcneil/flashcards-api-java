@@ -5,11 +5,13 @@ import model.Card;
 import java.util.List;
 
 public interface CardDao {
-    public List<Card> getCards(long deckId);
+    List<Card> getCards(long deckId);
 
-    public Card getCardById(long cardId);
+    Card getCardById(long cardId);
 
-    public Card updateCard(Card card);
+    Card createCard(Card card);
 
-    public int deleteCardById(long cardId);
+    Card updateCard(Card card);
+
+    int deleteCardById(long cardId);
 }

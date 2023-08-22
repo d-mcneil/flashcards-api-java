@@ -124,6 +124,25 @@ public class JdbcDeckDao implements DeckDao {
         }
     }
 
+    @Override
+    public void unlinkDeckUser(long deckId, int userId) {
+        // Deck-user pairings can only be removed from the deck_users table if the user
+        // is NOT the owner of the deck. In that case, deleteDeckById() is used instead.
+        String sql = "DELETE FROM deck_users " +
+                "USING deck " +
+                "WHERE deck.deck_id = deck_users.deck_id " +
+                "AND deck.owner_user_id != ? " + // The USING line, the first WHERE line, and this line all relate to the comment directly above.
+                "AND deck_users.user_id = ? " +
+                "AND deck_users.deck_id = ?;";
+        try {
+            jdbcTemplate.update(sql, userId, userId, deckId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+    }
+
     private Deck mapRowToDeck(SqlRowSet sqlRowSet) {
         Deck deck = new Deck();
         deck.setDeckId(sqlRowSet.getLong("deck_id"));

@@ -2,16 +2,19 @@ BEGIN TRANSACTION;
 
 DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CASCADE;
 
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE users (
 	user_id SERIAL,
-	username VARCHAR(63) NOT NULL,
+	username citext NOT NULL,
 	first_name VARCHAR(63) NOT NULL,
 	last_name VARCHAR(63) NOT NULL,
 	email VARCHAR(127) NOT NULL,
 	joined_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	is_user_active BOOLEAN NOT NULL DEFAULT true,
 	CONSTRAINT PK_user PRIMARY KEY (user_id),
-	CONSTRAINT UQ_username UNIQUE (username)
+	CONSTRAINT UQ_username UNIQUE (username),
+	CONSTRAINT CHK_username CHECK (LENGTH(username) > 0 AND LENGTH(username) <= 63)
 );
 
 CREATE TABLE login (
