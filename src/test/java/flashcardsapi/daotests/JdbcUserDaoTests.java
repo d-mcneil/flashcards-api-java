@@ -1,4 +1,4 @@
-package flashcardsapi;
+package flashcardsapi.daotests;
 
 import model.User;
 import org.junit.Assert;

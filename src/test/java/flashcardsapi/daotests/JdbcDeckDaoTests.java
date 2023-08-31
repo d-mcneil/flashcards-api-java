@@ -1,4 +1,4 @@
-package flashcardsapi;
+package flashcardsapi.daotests;
 
 import model.Deck;
 import org.junit.Assert;

@@ -4,8 +4,28 @@ DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CAS
 
 CREATE EXTENSION IF NOT EXISTS citext;
 
+CREATE SEQUENCE seq_user_id
+    INCREMENT BY 1
+    START WITH 1001
+    NO MAXVALUE;
+
+CREATE SEQUENCE seq_deck_id
+    INCREMENT BY 1
+    START WITH 2001
+    NO MAXVALUE;
+
+CREATE SEQUENCE seq_card_id
+    INCREMENT BY 1
+    START WITH 3001
+    NO MAXVALUE;
+
+CREATE SEQUENCE seq_settings_id
+    INCREMENT BY 1
+    START WITH 4001
+    NO MAXVALUE;
+
 CREATE TABLE users (
-	user_id SERIAL,
+	user_id INTEGER NOT NULL DEFAULT nextval('seq_user_id'),
 	username citext NOT NULL,
 	first_name VARCHAR(63) NOT NULL,
 	last_name VARCHAR(63) NOT NULL,
@@ -25,7 +45,7 @@ CREATE TABLE login (
 );
 
 CREATE TABLE deck (
-	deck_id BIGSERIAL,
+	deck_id BIGINT NOT NULL DEFAULT nextval('seq_deck_id'),
 	owner_user_id INTEGER NOT NULL,
 	-- owner_user_id INTEGER, -- If I want decks that belong to a delete account to persist, then I need to use this line instead.
 	deck_name VARCHAR(511) NOT NULL,
@@ -39,7 +59,7 @@ CREATE TABLE deck (
 );
 
 CREATE TABLE card (
-	card_id BIGSERIAL,
+	card_id BIGINT NOT NULL DEFAULT nextval('seq_card_id'),
 	deck_id BIGINT NOT NULL,
 	card_term VARCHAR(511) NOT NULL,
 	card_definition TEXT NOT NULL DEFAULT '',
@@ -52,8 +72,8 @@ CREATE TABLE card (
 
 -- Each user can choose their own settings for practicing a deck whether or not they are the owner of the deck.
 CREATE TABLE practice_settings (
-    settings_id BIGSERIAL,
-	is_definition_first BOOLEAN NOT NULL DEFAULT FALSE,
+    settings_id BIGINT NOT NULL DEFAULT nextval('seq_settings_id'),
+	is_definition_first BOOLEAN NOT NULL DEFAULT false,
 	practice_deck_percentage SMALLINT NOT NULL DEFAULT 100,
 	term_language_code CHAR(5) NOT NULL DEFAULT 'en-US',
 	definition_language_code CHAR(5) NOT NULL DEFAULT 'en-US',
@@ -81,7 +101,7 @@ CREATE TABLE deck_users (
             -- A user that is not the owner of a deck cannot make changes to the deck, but they do have their own practice settings for the deck.
     deck_id BIGINT,
     user_id INTEGER,
-    settings_id BIGSERIAL,
+    settings_id BIGINT,
     CONSTRAINT PK_deck_users PRIMARY KEY (deck_id, user_id),
     CONSTRAINT FK_deck_users_deck FOREIGN KEY (deck_id) REFERENCES deck (deck_id) ON DELETE CASCADE,
     CONSTRAINT FK_deck_users_users FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,

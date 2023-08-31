@@ -1,4 +1,4 @@
-package flashcardsapi;
+package flashcardsapi.daotests;
 
 import model.Card;
 import org.junit.Assert;
@@ -8,25 +8,27 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 public class JdbcCardDaoTests extends BaseDaoTests {
-    protected Card TEST_CARD_1;
-    protected Card TEST_CARD_2;
+
+    private Card TEST_CARD_1;
+    private Card TEST_CARD_2;
 
     @Before
     public void createCards() {
         TEST_CARD_1 = new Card();
-        TEST_CARD_1.setDeckId(1);
-        TEST_CARD_1.setCardTerm("TestCard1");
-        TEST_CARD_1.setCardDefinition("TestDefinition1");
-        TEST_CARD_1.setCardScore(1);
-        TEST_CARD_1.setCardCreatedDate(Timestamp.valueOf(LocalDateTime.of(2018, 3, 3, 3, 3, 3)));
-        TEST_CARD_1.setCardDeleted(false);
+        TEST_CARD_1.setCardId(3001);
+        TEST_CARD_1.setDeckId(2001);
+        TEST_CARD_1.setCardTerm("term1");
+        TEST_CARD_1.setCardDefinition("definition1");
+        TEST_CARD_1.setCardScore(0);
+        TEST_CARD_1.setCardCreatedDate(Timestamp.valueOf(LocalDateTime.of(9999, 12, 31, 23, 59, 59)));
 
         TEST_CARD_2 = new Card();
-        TEST_CARD_2.setDeckId(2);
-        TEST_CARD_2.setCardTerm("TestCard2");
-        TEST_CARD_2.setCardDefinition("TestDefinition2");
-        TEST_CARD_2.setCardScore(2);
-        TEST_CARD_2.setCardCreatedDate(Timestamp.valueOf(LocalDateTime.of(2017, 4, 4, 4, 4, 4)));
+        TEST_CARD_2.setCardId(3002);
+        TEST_CARD_2.setDeckId(2002);
+        TEST_CARD_2.setCardTerm("term2");
+        TEST_CARD_2.setCardDefinition("definition2");
+        TEST_CARD_2.setCardScore(-5);
+        TEST_CARD_2.setCardCreatedDate(Timestamp.valueOf(LocalDateTime.of(8888, 3, 3, 3, 3, 3)));
         TEST_CARD_2.setCardDeleted(false);
     }
 
