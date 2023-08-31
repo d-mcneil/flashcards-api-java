@@ -12,6 +12,7 @@ public interface CardDao {
     Card createCard(Card card);
 
     Card updateCard(Card card);
+    int updateCardScore(Card card);
 
     int deleteCardById(long cardId);
 }

@@ -72,18 +72,39 @@ public class JdbcDeckDao implements DeckDao {
     }
 
     @Override
-    public Deck updateDeck(Deck deck) {
+    public Deck createDeck(Deck deck) {
+        Deck newDeck;
+        String sql = "INSERT INTO deck (owner_user_id, deck_name, deck_description) " +
+                "VALUES (?, ?, ?) " +
+                "RETURNING deck_id;";
+        try {
+            Integer deckId = jdbcTemplate.queryForObject(sql, Integer.class, deck.getOwnerUserId(), deck.getDeckName(), deck.getDeckDescription());
+            if (deckId == null) {
+                throw new DaoException("Error creating deck");
+            }
+            newDeck = getDeckById(deckId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newDeck;
+    }
+
+    @Override
+    public Deck updateDeck(Deck deck, int ownerUserId) {
         Deck updatedDeck;
         String sql = "UPDATE deck (deck_name, deck_description, is_deck_public) " +
                 "SET deck_name = ?, deck_description = ?, is_deck_public = ? " +
-                "WHERE deck_id = ? AND is_deck_deleted = false;";
+                "WHERE deck_id = ? AND owner_user_id = ? AND is_deck_deleted = false;";
         try {
             int rowsAffected = jdbcTemplate.update(
                     sql,
                     deck.getDeckName(),
                     deck.getDeckDescription(),
                     deck.isDeckPublic(),
-                    deck.getDeckId()
+                    deck.getDeckId(),
+                    ownerUserId
             );
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected one.");
@@ -98,12 +119,37 @@ public class JdbcDeckDao implements DeckDao {
     }
 
     @Override
-    public int deleteDeckById(long deckId) {
+    public Deck updateIsDeckPublic(Deck deck, int ownerUserId){
+        Deck updatedDeck;
+        String sql = "UPDATE deck (is_deck_public) " +
+                "SET is_deck_public = ? " +
+                "WHERE deck_id = ? AND owner_user_id = ? AND is_deck_deleted = false;";
+        try {
+            int rowsAffected = jdbcTemplate.update(
+                    sql,
+                    deck.isDeckPublic(),
+                    deck.getDeckId(),
+                    ownerUserId
+            );
+            if (rowsAffected == 0) {
+                throw new DaoException("Zero rows affected, expected one.");
+            }
+            updatedDeck = getDeckById(deck.getDeckId());
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return updatedDeck;
+    }
+
+    @Override
+    public int deleteDeckById(long deckId, int ownerUserId) {
         int rowsDeleted = 0;
-        String sql = "DELETE FROM deck WHERE deck_id = ?;";
+        String sql = "DELETE FROM deck WHERE deck_id = ? AND owner_user_id = ?;";
         // String sql = "UPDATE deck SET is_deck_deleted = true WHERE deck_id = ?"; // This would be the SQL String if I were to use a boolean to "delete" decks instead of actually deleting them.
         try {
-            rowsDeleted = jdbcTemplate.update(sql, deckId);
+            rowsDeleted = jdbcTemplate.update(sql, deckId, ownerUserId);
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {

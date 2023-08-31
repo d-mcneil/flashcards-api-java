@@ -69,19 +69,37 @@ public class JdbcCardDao implements CardDao {
         }
         return card;
     }
+    @Override
+    public Card createCard(Card card) {
+        Card newCard;
+        String sql = "INSERT INTO card (deck_id, card_term, card_definition) " +
+                "VALUES (?, ?, ?) " +
+                "RETURNING card_id;";
+        try {
+            Integer cardId = jdbcTemplate.queryForObject(sql, Integer.class, card.getDeckId(), card.getCardTerm(), card.getCardDefinition());
+            if (cardId == null) {
+                throw new DaoException("Error creating card");
+            }
+            newCard = getCardById(cardId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newCard;
+    }
 
     @Override
     public Card updateCard(Card card) {
         Card updatedCard;
-        String sql = "UPDATE card (card_term, card_definition, card_score) " +
-                "SET card_term = ?, card_definition = ?, card_score = ? " +
+        String sql = "UPDATE card (card_term, card_definition) " +
+                "SET card_term = ?, card_definition = ? " +
                 "WHERE card_id = ? AND is_card_deleted = false;";
         try {
             int rowsAffected = jdbcTemplate.update(
                     sql,
                     card.getCardTerm(),
                     card.getCardDefinition(),
-                    card.getCardScore(),
                     card.getCardId()
             );
             if (rowsAffected == 0) {
@@ -95,6 +113,31 @@ public class JdbcCardDao implements CardDao {
         }
         return updatedCard;
     }
+
+   @Override
+    public int updateCardScore(Card card) {
+        int score;
+        String sql = "UPDATE card (card_score) " +
+                "SET card_score = ? " +
+                "WHERE card_id = ? AND is_card_deleted = false;";
+        try {
+            int rowsAffected = jdbcTemplate.update(
+                    sql,
+                    card.getCardScore(),
+                    card.getCardId()
+            );
+            if (rowsAffected == 0) {
+                throw new DaoException("Zero rows affected, expected one.");
+            }
+            score = getCardById(card.getCardId()).getCardScore();
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return score;
+    }
+
 
     @Override
     public int deleteCardById(long cardId) {

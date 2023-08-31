@@ -4,6 +4,4 @@ import model.Login;
 
 public interface LoginDao {
     Login getLoginByUserId(int userId);
-
-    Login createLogin(Login login);
 }

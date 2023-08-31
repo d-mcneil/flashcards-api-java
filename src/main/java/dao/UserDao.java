@@ -7,7 +7,7 @@ public interface UserDao {
 
     User getUserByUserId(int userId);
 
-    User createUser(User user);
+    User createUserAndLogin(User user, String hashedPassword);
 
     User updateUser(User user);
 

@@ -19,7 +19,7 @@ public class JdbcUserDao implements UserDao {
 
     @Override
     public int getUserIdByUsername(String username) {
-        int userId = 0;
+        int userId = -1;
         String sql = "SELECT user_id FROM users WHERE username = ?;";
         try {
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, userId);
@@ -55,6 +55,42 @@ public class JdbcUserDao implements UserDao {
             throw new DaoException("Unable to connect to server or database.", e);
         }
         return user;
+    }
+
+    @Override
+    public User createUserAndLogin(User user, String hashedPassword) {
+        User newUser;
+        String sql =
+                "BEGIN TRANSACTION; " +
+                "INSERT INTO login (user_id, hashed_password) " +
+                "VALUES (" +
+                "(" +
+                    "INSERT INTO users (username, first_name, last_name, email) " +
+                    "VALUES (?, ?, ?, ?) " +
+                    "RETURNING user_id" +
+                "), ?) " +
+                "RETURNING user_id;" +
+                "COMMIT TRANSACTION;";
+        try {
+            Integer userId = jdbcTemplate.queryForObject(
+                    sql,
+                    Integer.class,
+                    user.getUsername(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail(),
+                    hashedPassword
+            );
+            if (userId == null) {
+                throw new DaoException("Error creating user");
+            }
+            newUser = getUserByUserId(userId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newUser;
     }
 
     @Override
