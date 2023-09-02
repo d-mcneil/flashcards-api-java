@@ -23,7 +23,7 @@ public class TestingDatabaseConfig {
         adminDataSource.setUrl("jdbc:postgresql://localhost:5432/postgres");
         adminDataSource.setUsername("postgres");
         adminDataSource.setPassword("postgres1");
-        JdbcTemplate adminJdbcTemplate = new JdbcTemplate(adminDataSource);
+        adminJdbcTemplate = new JdbcTemplate(adminDataSource);
         adminJdbcTemplate.update("DROP DATABASE IF EXISTS \"FlashcardsTesting\";");
         adminJdbcTemplate.update("CREATE DATABASE \"FlashcardsTesting\";");
 
@@ -35,7 +35,8 @@ public class TestingDatabaseConfig {
         dataSource.setAutoCommit(false); // So we can rollback after each test.
 
         // Refresh the testing database by running the setup script
-        ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("database/flashcards.sql"));
+        ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("flashcards.sql"));
+        ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("test-data.sql"));
 
         return dataSource;
     }

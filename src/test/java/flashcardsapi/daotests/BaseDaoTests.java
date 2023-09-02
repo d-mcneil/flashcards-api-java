@@ -43,7 +43,7 @@ public abstract class BaseDaoTests {
         TEST_USER_1.setLastName("TestLast1");
         TEST_USER_1.setEmail("testuser1@example.com");
         TEST_USER_1.setJoinedDate(Timestamp.valueOf(LocalDateTime.of(9999, 10, 29, 21, 57, 57)));
-        TEST_USER_1.setUserActive(true);
+        TEST_USER_1.setUserActive(false);
 
         TEST_USER_2 = new User();
         TEST_USER_2.setUserId(1002);
@@ -52,7 +52,7 @@ public abstract class BaseDaoTests {
         TEST_USER_2.setLastName("TestLast2");
         TEST_USER_2.setEmail("testuser2@example.com");
         TEST_USER_2.setJoinedDate(Timestamp.valueOf(LocalDateTime.of(8888, 1, 1, 1, 1, 1)));
-        TEST_USER_2.setUserActive(false);
+        TEST_USER_2.setUserActive(true);
     }
 
     @Before

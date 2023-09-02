@@ -1,13 +1,136 @@
 package flashcardsapi.daotests;
 
+import dao.JdbcUserDao;
 import model.User;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.time.LocalDateTime;
 
 public class JdbcUserDaoTests extends BaseDaoTests {
     // From BaseDaoTests.java
-    //
-    // protected User TEST_USER_1;
-    // protected User TEST_USER_2;
+    // protected User TEST_USER_1; <-- inactive
+    // protected User TEST_USER_2; <-- active
+
+    private JdbcUserDao sut;
+
+    @Before
+    public void setup() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        sut = new JdbcUserDao(jdbcTemplate);
+    }
+
+// ************************************************************************************************************
+// int getUserIdByUsername(String username)
+// ************************************************************************************************************
+
+    @Test
+    public void getUserIdByUsername_returns_correct_user_id_for_user_that_is_active() {
+        int userId = sut.getUserIdByUsername(TEST_USER_2.getUsername());
+        Assert.assertEquals(TEST_USER_2.getUserId(), userId);
+    }
+
+    @Test
+    public void getUserIdByUsername_returns_negative_1_for_user_that_is_not_active() {
+        int nonExistentUserId = sut.getUserIdByUsername(TEST_USER_1.getUsername());
+        Assert.assertEquals(-1, nonExistentUserId);
+    }
+
+    @Test
+    public void getUserIdByUsername_returns_negative_1_for_user_that_does_not_exist() {
+        int nonExistentUserId = sut.getUserIdByUsername("xxxxxxxxx");
+        Assert.assertEquals(-1, nonExistentUserId);
+    }
+
+    @Test
+    public void getUserIdByUsername_returns_negative_1_for_empty_string_username() {
+        int nonExistentUserId = sut.getUserIdByUsername("");
+        Assert.assertEquals(-1, nonExistentUserId);
+    }
+
+    @Test
+    public void getUserIdByUsername_returns_negative_1_for_null_username() {
+        int nonExistentUserId = sut.getUserIdByUsername(null);
+        Assert.assertEquals(-1, nonExistentUserId);
+    }
+
+// ************************************************************************************************************
+// User getUserByUserId(int userId)
+// ************************************************************************************************************
+
+    @Test
+    public void getUserByUserId_returns_correct_user_information_for_user_that_is_active() {
+        User user2 = sut.getUserByUserId(TEST_USER_2.getUserId());
+        assertUsersMatch(TEST_USER_2, user2);
+    }
+
+    @Test
+    public void getUserByUserId_returns_null_for_user_that_is_not_active() {
+        User user1 = sut.getUserByUserId(TEST_USER_1.getUserId());
+        Assert.assertNull(user1);
+    }
+
+    @Test
+    public void getUserByUserId_returns_null_for_user_that_does_not_exist() {
+        User nullUser = sut.getUserByUserId(-1);
+        Assert.assertNull(nullUser);
+    }
+
+// ************************************************************************************************************
+// User createUserAndLogin(User user, String hashedPassword)
+    // TODO: create tests for not happy path (username already exists)
+// ************************************************************************************************************
+
+    // TODO: the test below does not test for the row being successfully created in the login table, only the users table
+    @Test
+    public void createUserAndLogin_returns_correct_user_information_when_user_and_login_are_successfully_created() {
+        // Arrange
+        User testUser = new User();
+        testUser.setUserId(1003);
+        testUser.setUsername("newuser");
+        testUser.setFirstName("new");
+        testUser.setLastName("user");
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        // Act
+        User createdUser = sut.createUserAndLogin(testUser, "3".repeat(60));
+        testUser.setJoinedDate(createdUser.getJoinedDate()); // The database generates the timestamp by default, so here we set it to what the database generated
+        int createdUserId = createdUser.getUserId();
+        User retrievedUser = sut.getUserByUserId(createdUserId);
+
+        // Assert
+        assertUsersMatch(testUser, retrievedUser);
+
+        LocalDateTime rightNow = LocalDateTime.now();
+        LocalDateTime createdUserTimestamp = createdUser.getJoinedDate().toLocalDateTime();
+        if (createdUserTimestamp.getYear() != rightNow.getYear() ||
+                createdUserTimestamp.getMonth() != rightNow.getMonth() ||
+                createdUserTimestamp.getDayOfMonth() != rightNow.getDayOfMonth() ||
+                createdUserTimestamp.getHour() != rightNow.getHour() ||
+                createdUserTimestamp.getMinute() != rightNow.getMinute() ||
+                createdUserTimestamp.getSecond() != rightNow.getSecond()
+        ) { // here we are checking to make sure the timestamp generated by the database is actually valid by comparing it to LocalDateTime.now()
+            Assert.fail("Timestamp generated by database does not match timestamp generated by server.");
+        }
+    }
+
+// ************************************************************************************************************
+// User updateUser(User user)
+    // TODO: create tests
+// ************************************************************************************************************
+
+// ************************************************************************************************************
+// int deleteUserById(int userId)
+    // TODO: create tests
+// ************************************************************************************************************
+
+
+// ************************************************************************************************************
+// convenience methods
+// ************************************************************************************************************
 
     private void assertUsersMatch(User expected, User actual) {
         Assert.assertEquals(expected.getUserId(), actual.getUserId());
