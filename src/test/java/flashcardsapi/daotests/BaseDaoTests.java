@@ -1,8 +1,6 @@
 package flashcardsapi.daotests;
 
-import model.Card;
 import model.Deck;
-import model.PracticeSettings;
 import model.User;
 import org.junit.After;
 import org.junit.Before;

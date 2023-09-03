@@ -7,9 +7,11 @@ public interface UserDao {
 
     User getUserByUserId(int userId);
 
-    User createUserAndLogin(User user, String hashedPassword);
-
     User updateUser(User user);
 
     int deleteUserById(int userId);
+
+    User createUser(User user, String hashedPassword);
+
+    String getHashedPasswordByUsername(String username);
 }

@@ -34,7 +34,14 @@ CREATE TABLE users (
 	is_user_active BOOLEAN NOT NULL DEFAULT true,
 	CONSTRAINT PK_user PRIMARY KEY (user_id),
 	CONSTRAINT UQ_username UNIQUE (username),
-	CONSTRAINT CHK_username CHECK (LENGTH(username) > 0 AND LENGTH(username) <= 63)
+	CONSTRAINT CHK_username CHECK (LENGTH(username) > 0 AND LENGTH(username) <= 63),
+	CONSTRAINT CHK_first_name CHECK (LENGTH(first_name) > 0 AND LENGTH(first_name) <= 63),
+	CONSTRAINT CHK_last_name CHECK (LENGTH(last_name) > 0 AND LENGTH(last_name) <= 63),
+	CONSTRAINT CHK_email CHECK (
+	    LENGTH(email) >= 5 AND
+	    LENGTH(email) <= 127 AND
+	    email LIKE '%@%.%'
+	)
 );
 
 CREATE TABLE login (

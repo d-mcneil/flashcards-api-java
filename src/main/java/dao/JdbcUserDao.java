@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Component
 public class JdbcUserDao implements UserDao {
 
@@ -58,48 +59,6 @@ public class JdbcUserDao implements UserDao {
         return user;
     }
 
-    @Override
-    @Transactional
-    public User createUserAndLogin(User user, String hashedPassword) {
-        User newUser;
-        String sqlCreateUser =
-                "INSERT INTO users (username, first_name, last_name, email) " +
-                "VALUES (?, ?, ?, ?) " +
-                "RETURNING user_id;";
-        String sqlCreateLogin =
-                "INSERT INTO login (user_id, hashed_password) " +
-                "VALUES (?, ?) " +
-                "RETURNING user_id;";
-
-        try {
-            Integer userId = jdbcTemplate.queryForObject(
-                    sqlCreateUser,
-                    Integer.class,
-                    user.getUsername(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getEmail()
-            );
-            if (userId == null) {
-                throw new DaoException("Error creating user");
-            }
-            userId = jdbcTemplate.queryForObject(
-                    sqlCreateLogin,
-                    Integer.class,
-                    userId,
-                    hashedPassword
-            );
-            if (userId == null) {
-                throw new DaoException("Error creating login");
-            }
-            newUser = getUserByUserId(userId);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
-        } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
-        }
-        return newUser;
-    }
 
     @Override
     public User updateUser(User user) {
@@ -142,6 +101,74 @@ public class JdbcUserDao implements UserDao {
         }
         return rowsDeleted;
     }
+
+// ****************************************************************************************************************************************************************
+// ********************************* Login Methods ****************************************************************************************************************
+// ****************************************************************************************************************************************************************
+
+    @Override
+    @Transactional
+    public User createUser(User user, String hashedPassword) {
+        User newUser;
+        String sqlCreateUser =
+                "INSERT INTO users (username, first_name, last_name, email) " +
+                "VALUES (?, ?, ?, ?) " +
+                "RETURNING user_id;";
+        String sqlCreateLogin =
+                "INSERT INTO login (user_id, hashed_password) " +
+                "VALUES (?, ?) " +
+                "RETURNING user_id;";
+        try {
+            Integer userId = jdbcTemplate.queryForObject(
+                    sqlCreateUser,
+                    Integer.class,
+                    user.getUsername(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail()
+            );
+            if (userId == null) {
+                throw new DaoException("Error creating user");
+            }
+            userId = jdbcTemplate.queryForObject(
+                    sqlCreateLogin,
+                    Integer.class,
+                    userId,
+                    hashedPassword
+            );
+            if (userId == null) {
+                throw new DaoException("Error creating login");
+            }
+            newUser = getUserByUserId(userId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newUser;
+    }
+
+    @Override
+    public String getHashedPasswordByUsername(String username) {
+        String hashedPassword = null;
+        String sql = "SELECT hashed_password " +
+                "FROM login " +
+                "JOIN users ON login.user_id = users.user_id " +
+                "WHERE username = ? AND is_user_active = true;";
+        try {
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, username);
+            if (sqlRowSet.next()) {
+                hashedPassword = sqlRowSet.getString("hashed_password");
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database.", e);
+        }
+        return hashedPassword;
+    }
+
+// ****************************************************************************************************************************************************************
+// ********************************* Convenience Method ***********************************************************************************************************
+// ****************************************************************************************************************************************************************
 
     private User mapRowToUser(SqlRowSet sqlRowSet) {
         User user = new User();
