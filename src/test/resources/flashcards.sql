@@ -1,8 +1,9 @@
 BEGIN TRANSACTION;
 
-DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CASCADE;
-
 CREATE EXTENSION IF NOT EXISTS citext;
+
+DROP TABLE IF EXISTS deck_users, practice_settings, card, deck, login, users CASCADE;
+DROP SEQUENCE IF EXISTS seq_user_id, seq_deck_id, seq_card_id, seq_settings_id;
 
 CREATE SEQUENCE seq_user_id
     INCREMENT BY 1
