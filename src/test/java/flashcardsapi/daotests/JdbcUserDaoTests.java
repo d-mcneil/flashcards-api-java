@@ -6,6 +6,7 @@ import model.User;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
@@ -132,7 +133,7 @@ public class JdbcUserDaoTests extends BaseDaoTests {
 // #################################################################
 // User createUser(User user, String hashedPassword)
 // #################################################################
-// TODO: create tests for not happy path (hashed password isn't 60 chars, email is too short/long, email doesn't match formatting)
+// TODO: create tests for not happy path (hashed password isn't 60 chars), and make sure that each test does what it says
 
     // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
     // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
@@ -149,7 +150,7 @@ public class JdbcUserDaoTests extends BaseDaoTests {
         testUser.setUsername("newuser".repeat(9));
         testUser.setFirstName("new");
         testUser.setLastName("user");
-        testUser.setEmail("newuser@example.com");
+        testUser.setEmail("a@b.c");
         testUser.setUserActive(true);
 
         // --------------------- Act -----------------------------------------
@@ -208,12 +209,37 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             sut.createUser(testUser, "3".repeat(60));
             Assert.fail("Method did not throw exception as expected when duplicate username was added.");
         } catch (DaoException e) {
-            Assert.assertEquals("Data integrity violation", e.getMessage());
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
             Assert.assertEquals("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: duplicate key value violates unique constraint \"uq_username\"\n" +
                     "  Detail: Key (username)=(usErName1) already exists.; nested exception is org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint \"uq_username\"\n" +
                     "  Detail: Key (username)=(usErName1) already exists.", e.getCause().getMessage());
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when duplicate username was added.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_username_is_null() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername(null);
+        testUser.setFirstName("new");
+        testUser.setLastName("user");
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when username was null.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"username\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"username\" violates not-null constraint"));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when username was null.");
         }
     }
 
@@ -234,12 +260,36 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             sut.createUser(testUser, "3".repeat(60));
             Assert.fail("Method did not throw exception as expected when username was empty string.");
         } catch (DaoException e) {
-            Assert.assertEquals("Data integrity violation", e.getMessage());
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_username\"\n" +
-                    "  Detail: Failing row contains (" + (1002 + numberOfTestsThatAttemptToCreateNewUser) + ", , new, user, newuser@example.com,"));
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_username\"\n"));
             Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_username\""));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when username was empty string.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_username_is_more_than_63_characters() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a".repeat(64));
+        testUser.setFirstName("new");
+        testUser.setLastName("user");
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when username was more than 63 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_username\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_username\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when username was more than 63 characters.");
         }
     }
 
@@ -260,12 +310,85 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             sut.createUser(testUser, "3".repeat(60));
             Assert.fail("Method did not throw exception as expected when first name was null.");
         } catch (DaoException e) {
-            Assert.assertEquals("Data integrity violation", e.getMessage());
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"first_name\" violates not-null constraint\n" +
-                    "  Detail: Failing row contains (" + (1002 + numberOfTestsThatAttemptToCreateNewUser) + ", a, null, user, newuser@example.com,"));
-            Assert.assertTrue(e.getCause().getMessage().contains("; nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"first_name\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"first_name\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"first_name\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when first name was null.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_first_name_is_empty_string() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("newuser".repeat(9));
+        testUser.setFirstName("");
+        testUser.setLastName("user");
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when first name was empty string.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_first_name\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_first_name\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when first name was empty string.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_first_name_is_more_than_63_characters() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a".repeat(64));
+        testUser.setLastName("user");
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when first name was more than 63 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertEquals("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: value too long for type character varying(63); nested exception is org.postgresql.util.PSQLException: ERROR: value too long for type character varying(63)", e.getCause().getMessage());
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when first name was more than 63 characters.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_last_name_is_null() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("new");
+        testUser.setLastName(null);
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when last name was null.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"last_name\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" violates not-null constraint"));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when last name was null.");
         }
     }
 
@@ -286,14 +409,208 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             sut.createUser(testUser, "3".repeat(60));
             Assert.fail("Method did not throw exception as expected when last name was empty string.");
         } catch (DaoException e) {
-            Assert.assertEquals("Data integrity violation", e.getMessage());
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_last_name\"\n" +
-                    "  Detail: Failing row contains (" + (1002 + numberOfTestsThatAttemptToCreateNewUser) + ", newusernewusernewusernewusernewusernewusernewusernewusernewuser, new, , newuser@example.com,"));
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_last_name\"\n"));
             Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_last_name\""));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when last name was empty string.");
         }
     }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_last_name_is_more_than_63_characters() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a".repeat(64));
+        testUser.setEmail("newuser@example.com");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when last name was more than 63 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertEquals("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: value too long for type character varying(63); nested exception is org.postgresql.util.PSQLException: ERROR: value too long for type character varying(63)", e.getCause().getMessage());
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when last name was more than 63 characters.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_is_null() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("new");
+        testUser.setLastName("user");
+        testUser.setEmail(null);
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email was null.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"email\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("; nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"email\" violates not-null constraint"));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email was null.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_is_less_than_5_characters() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("a@b.");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email was less than 5 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email was less than 5 characters.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_is_more_than_127_characters() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("a@b.c" + "a".repeat(123));
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email was more than 127 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertEquals("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: value too long for type character varying(127); nested exception is org.postgresql.util.PSQLException: ERROR: value too long for type character varying(127)", e.getCause().getMessage());
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email was more than 127 characters.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_has_no_at_sign() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("aa.aa");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email didn't have at sign.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email didn't have at sign.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_has_no_period() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("aa@aa");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email didn't have period.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email didn't have period");
+        }
+    }
+
+
+
+
+
+
+
+
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_hashed_password_is_not_60_characters_and_user_is_not_created(){
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("newuser".repeat(9));
+        testUser.setFirstName("new");
+        testUser.setLastName("user");
+        testUser.setEmail("a@b.c");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(59));
+            Assert.fail("Method did not throw exception as expected when hashed password was not 60 characters.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO login (user_id, hashed_password) VALUES (?, ?) RETURNING user_id;]; ERROR: new row for relation \"login\" violates check constraint \"chk_hashed_password\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"login\" violates check constraint \"chk_hashed_password\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when hashed password was not 60 characters.");
+        }
+
+// TODO the test fails when I turn autocommit off in my testing database, so that tells me that the transaction in the method is not working properly. the user shouldn't be retrievable, but it is
+        Assert.assertNull(sut.getUserByUserId(1002 + numberOfTestsThatAttemptToCreateNewUser));
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 // ****************************************************************************************************************************************************************
 // ********************************* Convenience Method ***********************************************************************************************************

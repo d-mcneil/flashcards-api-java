@@ -1,6 +1,7 @@
 package dao;
 
 import exception.DaoException;
+import exceptionmessages.ExceptionMessages;
 import model.User;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -29,7 +30,7 @@ public class JdbcUserDao implements UserDao {
                 userId = sqlRowSet.getInt("user_id");
             }
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database.", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         }
         return userId;
     }
@@ -54,7 +55,7 @@ public class JdbcUserDao implements UserDao {
                 user = mapRowToUser(sqlRowSet);
             }
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database.", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         }
         return user;
     }
@@ -80,9 +81,9 @@ public class JdbcUserDao implements UserDao {
             }
             updatedUser = getUserByUserId(user.getUserId());
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
+            throw new DaoException(ExceptionMessages.DATA_INTEGRITY_VIOLATION_EXCEPTION_MESSAGE, e);
         }
         return updatedUser;
     }
@@ -95,9 +96,9 @@ public class JdbcUserDao implements UserDao {
         try {
             rowsDeleted = jdbcTemplate.update(sql, userId);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
+            throw new DaoException(ExceptionMessages.DATA_INTEGRITY_VIOLATION_EXCEPTION_MESSAGE, e);
         }
         return rowsDeleted;
     }
@@ -141,9 +142,9 @@ public class JdbcUserDao implements UserDao {
             }
             newUser = getUserByUserId(userId);
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         } catch (DataIntegrityViolationException e) {
-            throw new DaoException("Data integrity violation", e);
+            throw new DaoException(ExceptionMessages.DATA_INTEGRITY_VIOLATION_EXCEPTION_MESSAGE, e);
         }
         return newUser;
     }
@@ -161,7 +162,7 @@ public class JdbcUserDao implements UserDao {
                 hashedPassword = sqlRowSet.getString("hashed_password");
             }
         } catch (CannotGetJdbcConnectionException e) {
-            throw new DaoException("Unable to connect to server or database.", e);
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         }
         return hashedPassword;
     }

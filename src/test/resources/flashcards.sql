@@ -36,8 +36,8 @@ CREATE TABLE users (
 	CONSTRAINT PK_user PRIMARY KEY (user_id),
 	CONSTRAINT UQ_username UNIQUE (username),
 	CONSTRAINT CHK_username CHECK (LENGTH(username) > 0 AND LENGTH(username) <= 63),
-	CONSTRAINT CHK_first_name CHECK (LENGTH(first_name) > 0 AND LENGTH(first_name) <= 63),
-	CONSTRAINT CHK_last_name CHECK (LENGTH(last_name) > 0 AND LENGTH(last_name) <= 63),
+	CONSTRAINT CHK_first_name CHECK (LENGTH(first_name) > 0),
+	CONSTRAINT CHK_last_name CHECK (LENGTH(last_name) > 0),
 	CONSTRAINT CHK_email CHECK (
 	    LENGTH(email) >= 5 AND
 	    LENGTH(email) <= 127 AND
@@ -49,7 +49,8 @@ CREATE TABLE login (
     user_id INTEGER,
 	hashed_password CHAR(60) NOT NULL,
 	CONSTRAINT PK_login PRIMARY KEY (user_id),
-	CONSTRAINT FK_login_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
+	CONSTRAINT FK_login_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+	CONSTRAINT CHK_hashed_password CHECK (LENGTH(hashed_password) = 60)
 );
 
 CREATE TABLE deck (
