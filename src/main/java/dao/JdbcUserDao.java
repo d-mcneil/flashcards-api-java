@@ -64,7 +64,7 @@ public class JdbcUserDao implements UserDao {
     @Override
     public User updateUser(User user) {
         User updatedUser;
-        String sql = "UPDATE users (username, first_name, last_name, email) " +
+        String sql = "UPDATE users " +
                 "SET username = ?, first_name = ?, last_name = ?, email = ? " +
                 "WHERE user_id = ? AND is_user_active = true;";
         try {
@@ -77,7 +77,7 @@ public class JdbcUserDao implements UserDao {
                     user.getUserId()
             );
             if (rowsAffected == 0) {
-                throw new DaoException("Zero rows affected, expected one.");
+                throw new DaoException(ExceptionMessages.DAO_EXCEPTION_ZERO_ROWS_AFFECTED_MESSAGE);
             }
             updatedUser = getUserByUserId(user.getUserId());
         } catch (CannotGetJdbcConnectionException e) {

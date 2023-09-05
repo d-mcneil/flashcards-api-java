@@ -41,7 +41,7 @@ CREATE TABLE users (
 	CONSTRAINT CHK_email CHECK (
 	    LENGTH(email) >= 5 AND
 	    LENGTH(email) <= 127 AND
-	    email LIKE '%@%.%'
+	    email LIKE '%_@%_.%_'
 	)
 );
 

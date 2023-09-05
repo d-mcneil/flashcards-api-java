@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
@@ -80,17 +81,100 @@ public class JdbcUserDaoTests extends BaseDaoTests {
         Assert.assertNull(nullUser);
     }
 
-
 // ############################################################################################################
 // User updateUser(User user)
-    // TODO: create tests
 // ############################################################################################################
+
+    @Test
+    public void updateUser_returns_correct_user_information_and_user_has_correct_information_when_retrieved() {
+        User userToUpdate = sut.getUserByUserId(1002);
+        userToUpdate.setEmail("updated@example.com");
+        userToUpdate.setUsername("updatedUsername");
+        userToUpdate.setFirstName("updatedFirst");
+        userToUpdate.setLastName("updatedLast");
+
+        User updatedUser = sut.updateUser(userToUpdate);
+
+        User retrievedUser = sut.getUserByUserId(1002);
+
+        assertUsersMatch(userToUpdate, retrievedUser);
+        assertUsersMatch(userToUpdate, updatedUser);
+    }
+
+    @Test
+    public void updateUser_throws_dao_exception_when_user_is_not_active() {
+        User userToUpdate = new User();
+        userToUpdate.setUserId(1001);
+        userToUpdate.setEmail("updated@example.com");
+        userToUpdate.setUsername("updatedUsername");
+        userToUpdate.setFirstName("updatedFirst");
+        userToUpdate.setLastName("updatedLast");
+
+        try {
+            sut.updateUser(userToUpdate);
+            Assert.fail("Method did not throw exception as expected when user was inactive.");
+        } catch (DaoException e) {
+            Assert.assertFalse(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertFalse(e.getCause() instanceof CannotGetJdbcConnectionException);
+            Assert.assertNull(e.getCause());
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when user was inactive.");
+        }
+    }
+
+    @Test
+    public void updateUser_throws_dao_exception_when_user_does_not_exist() {
+        User userToUpdate = new User();
+        userToUpdate.setUserId(-1);
+        userToUpdate.setEmail("updated@example.com");
+        userToUpdate.setUsername("updatedUsername");
+        userToUpdate.setFirstName("updatedFirst");
+        userToUpdate.setLastName("updatedLast");
+
+        try {
+            sut.updateUser(userToUpdate);
+            Assert.fail("Method did not throw exception as expected when user was inactive.");
+        } catch (DaoException e) {
+            Assert.assertFalse(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertFalse(e.getCause() instanceof CannotGetJdbcConnectionException);
+            Assert.assertNull(e.getCause());
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when user was inactive.");
+        }
+    }
+
+    @Test
+    public void updateUser_throws_data_integrity_violation_when_field_violates_constraint() {
+        User userToUpdate = sut.getUserByUserId(1002);
+        userToUpdate.setEmail("updated@example.com");
+        userToUpdate.setUsername("updatedUsername");
+        userToUpdate.setFirstName("updatedFirst");
+        userToUpdate.setLastName(null);
+
+        try {
+            sut.updateUser(userToUpdate);
+            Assert.fail("Method did not throw exception as expected when last name was null.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ? WHERE user_id = ? AND is_user_active = true;]; ERROR: null value in column \"last_name\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" violates not-null constraint"));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when last name was null.");
+        }
+    }
 
 // ############################################################################################################
 // int deleteUserById(int userId)
-    // TODO: create tests
 // ############################################################################################################
 
+    @Test
+    public void deleteUserById_returns_1_when_user_successfully_deleted_and_deleted_user_cannot_be_retrieved() {
+        int rowsDeleted = sut.deleteUserById(1001);
+        User retrievedUser = sut.getUserByUserId(1001);
+
+        Assert.assertNull("Deleted user can still be retrieved.", retrievedUser);
+        Assert.assertEquals(1, rowsDeleted);
+    }
 
 // ****************************************************************************************************************************************************************
 // ********************************* Login Methods ****************************************************************************************************************
@@ -133,14 +217,14 @@ public class JdbcUserDaoTests extends BaseDaoTests {
 // #################################################################
 // User createUser(User user, String hashedPassword)
 // #################################################################
-// TODO: create tests for not happy path (hashed password isn't 60 chars), and make sure that each test does what it says
+// TODO: and make sure that each test does what it says
 
     // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
     // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
     private static int numberOfTestsThatAttemptToCreateNewUser = 0;
 
     @Test
-    public void createUser_returns_correct_user_information_and_correctly_sets_given_hashed_password_when_user_and_login_are_successfully_created() {
+    public void createUser_returns_correct_user_information_and_correctly_sets_hashed_password_and_user_has_correct_information_when_retrieved() {
         // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
         // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
         numberOfTestsThatAttemptToCreateNewUser++;
@@ -175,6 +259,7 @@ public class JdbcUserDaoTests extends BaseDaoTests {
 
         // --------------------- Assert --------------------------------------
         assertUsersMatch(testUser, retrievedUser);
+        assertUsersMatch(createdUser, retrievedUser);
 
         Assert.assertEquals("3".repeat(60), hashedPassword);
 
@@ -347,7 +432,9 @@ public class JdbcUserDaoTests extends BaseDaoTests {
     public void createUser_throws_data_integrity_violation_when_first_name_is_more_than_63_characters() {
         // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
         // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
-        numberOfTestsThatAttemptToCreateNewUser++;
+        // numberOfTestsThatAttemptToCreateNewUser++;
+        // Adding the increment isn't correct for this test because using a value for the field that
+        // is greater than the length of the SQL data type seems to prevent the sequence from being accessed.
 
         User testUser = new User();
         testUser.setUsername("a");
@@ -421,7 +508,9 @@ public class JdbcUserDaoTests extends BaseDaoTests {
     public void createUser_throws_data_integrity_violation_when_last_name_is_more_than_63_characters() {
         // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
         // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
-        numberOfTestsThatAttemptToCreateNewUser++;
+        // numberOfTestsThatAttemptToCreateNewUser++;
+        // Adding the increment isn't correct for this test because using a value for the field that
+        // is greater than the length of the SQL data type seems to prevent the sequence from being accessed.
 
         User testUser = new User();
         testUser.setUsername("a");
@@ -495,7 +584,9 @@ public class JdbcUserDaoTests extends BaseDaoTests {
     public void createUser_throws_data_integrity_violation_when_email_is_more_than_127_characters() {
         // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
         // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
-        numberOfTestsThatAttemptToCreateNewUser++;
+        // numberOfTestsThatAttemptToCreateNewUser++;
+        // Adding the increment isn't correct for this test because using a value for the field that
+        // is greater than the length of the SQL data type seems to prevent the sequence from being accessed.
 
         User testUser = new User();
         testUser.setUsername("a");
@@ -561,20 +652,87 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
             Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
         } catch (Exception e) {
-            Assert.fail("Method did not throw DaoException as expected when email didn't have period");
+            Assert.fail("Method did not throw DaoException as expected when email didn't have period.");
         }
     }
 
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_has_nothing_after_period() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
 
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("aa@a.");
+        testUser.setUserActive(true);
 
-
-
-
-
-
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email didn't have anything after period.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email didn't have anything after period.");
+        }
+    }
 
     @Test
-    public void createUser_throws_data_integrity_violation_when_hashed_password_is_not_60_characters_and_user_is_not_created(){
+    public void createUser_throws_data_integrity_violation_when_email_has_nothing_before_at_sign() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("@a.aa");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email didn't have anything before at sign.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email didn't have anything before at sign.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_email_has_nothing_between_at_sign_and_period() {
+        // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
+        // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
+        numberOfTestsThatAttemptToCreateNewUser++;
+
+        User testUser = new User();
+        testUser.setUsername("a");
+        testUser.setFirstName("a");
+        testUser.setLastName("a");
+        testUser.setEmail("aa@.a");
+        testUser.setUserActive(true);
+
+        try {
+            sut.createUser(testUser, "3".repeat(60));
+            Assert.fail("Method did not throw exception as expected when email didn't have anything between at sign and period.");
+        } catch (DaoException e) {
+            Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: new row for relation \"users\" violates check constraint \"chk_email\"\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: new row for relation \"users\" violates check constraint \"chk_email\""));
+        } catch (Exception e) {
+            Assert.fail("Method did not throw DaoException as expected when email didn't have anything between at sign and period.");
+        }
+    }
+
+    @Test
+    public void createUser_throws_data_integrity_violation_when_hashed_password_is_not_60_characters_and_user_is_not_created() {
         // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
         // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
         numberOfTestsThatAttemptToCreateNewUser++;
@@ -600,17 +758,6 @@ public class JdbcUserDaoTests extends BaseDaoTests {
 // TODO the test fails when I turn autocommit off in my testing database, so that tells me that the transaction in the method is not working properly. the user shouldn't be retrievable, but it is
         Assert.assertNull(sut.getUserByUserId(1002 + numberOfTestsThatAttemptToCreateNewUser));
     }
-
-
-
-
-
-
-
-
-
-
-
 
 // ****************************************************************************************************************************************************************
 // ********************************* Convenience Method ***********************************************************************************************************
