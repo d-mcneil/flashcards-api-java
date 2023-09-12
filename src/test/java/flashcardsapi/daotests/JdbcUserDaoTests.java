@@ -156,8 +156,8 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.fail("Method did not throw exception as expected when last name was null.");
         } catch (DaoException e) {
             Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ? WHERE user_id = ? AND is_user_active = true;]; ERROR: null value in column \"last_name\" violates not-null constraint\n"));
-            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ? WHERE user_id = ? AND is_user_active = true;]; ERROR: null value in column \"last_name\" of relation \"users\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" of relation \"users\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when last name was null.");
         }
@@ -217,7 +217,6 @@ public class JdbcUserDaoTests extends BaseDaoTests {
 // #################################################################
 // User createUser(User user, String hashedPassword)
 // #################################################################
-// TODO: and make sure that each test does what it says
 
     // SEQUENCES ARE NOT ROLLED BACK WHEN A TRANSACTION GOES THROUGH A ROLLBACK. THEREFORE, THE USER_ID IS DEPENDENT
     // ON THE ORDER THAT TESTS RUN AND THE AMOUNT OF TESTS ATTEMPTING TO CREATE A USER THAT HAVE RUN PREVIOUSLY.
@@ -321,8 +320,8 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.fail("Method did not throw exception as expected when username was null.");
         } catch (DaoException e) {
             Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"username\" violates not-null constraint\n"));
-            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"username\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"username\" of relation \"users\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"username\" of relation \"users\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when username was null.");
         }
@@ -396,8 +395,8 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.fail("Method did not throw exception as expected when first name was null.");
         } catch (DaoException e) {
             Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"first_name\" violates not-null constraint\n"));
-            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"first_name\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"first_name\" of relation \"users\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"first_name\" of relation \"users\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when first name was null.");
         }
@@ -472,8 +471,8 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.fail("Method did not throw exception as expected when last name was null.");
         } catch (DaoException e) {
             Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"last_name\" violates not-null constraint\n"));
-            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"last_name\" of relation \"users\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"last_name\" of relation \"users\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when last name was null.");
         }
@@ -548,8 +547,8 @@ public class JdbcUserDaoTests extends BaseDaoTests {
             Assert.fail("Method did not throw exception as expected when email was null.");
         } catch (DaoException e) {
             Assert.assertTrue(e.getCause() instanceof DataIntegrityViolationException);
-            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"email\" violates not-null constraint\n"));
-            Assert.assertTrue(e.getCause().getMessage().contains("; nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"email\" violates not-null constraint"));
+            Assert.assertTrue(e.getCause().getMessage().contains("PreparedStatementCallback; SQL [INSERT INTO users (username, first_name, last_name, email) VALUES (?, ?, ?, ?) RETURNING user_id;]; ERROR: null value in column \"email\" of relation \"users\" violates not-null constraint\n"));
+            Assert.assertTrue(e.getCause().getMessage().contains("; nested exception is org.postgresql.util.PSQLException: ERROR: null value in column \"email\" of relation \"users\" violates not-null constraint"));
         } catch (Exception e) {
             Assert.fail("Method did not throw DaoException as expected when email was null.");
         }
