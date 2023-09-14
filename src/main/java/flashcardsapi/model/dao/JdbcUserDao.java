@@ -1,8 +1,8 @@
-package dao;
+package flashcardsapi.model.dao;
 
-import exception.DaoException;
-import exceptionmessages.ExceptionMessages;
-import model.User;
+import flashcardsapi.exception.DaoException;
+import flashcardsapi.exception.exceptionmessages.ExceptionMessages;
+import flashcardsapi.model.models.User;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -180,6 +180,7 @@ public class JdbcUserDao implements UserDao {
         user.setEmail(sqlRowSet.getString("email"));
         user.setJoinedDate(sqlRowSet.getTimestamp("joined_date"));
         user.setUserActive(sqlRowSet.getBoolean("is_user_active"));
+        user.setAuthorities("USER");
         return user;
     }
 }

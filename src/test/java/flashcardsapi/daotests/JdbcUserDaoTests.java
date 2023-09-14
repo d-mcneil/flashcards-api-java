@@ -1,8 +1,8 @@
 package flashcardsapi.daotests;
 
-import dao.JdbcUserDao;
-import exception.DaoException;
-import model.User;
+import flashcardsapi.model.dao.JdbcUserDao;
+import flashcardsapi.exception.DaoException;
+import flashcardsapi.model.models.User;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,6 +1,6 @@
 package flashcardsapi.daotests;
 
-import model.Deck;
+import flashcardsapi.model.models.Deck;
 import org.junit.Assert;
 
 public class JdbcDeckDaoTests extends BaseDaoTests {

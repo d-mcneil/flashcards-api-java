@@ -124,7 +124,7 @@ CREATE TABLE deck_users (
 -- After a new deck is inserted, a new entry should be put into deck_users that links the new deck and its owner.
 -- This is not redundant data, because users can practice decks that they don't own themselves.
 -- This is kept track of in the deck_users table, and that table also associates practice settings to that
--- user/deck combination. But, because users (obvviously) can practice decks they own, that link needs to be made
+-- user/deck combination. But, because users (obviously) can practice decks they own, that link needs to be made
 -- in the deck_users table as well, because that is what is used by the application to grab the list of decks
 -- that are available to practice.
 -- **************************************************************************************************************

@@ -1,7 +1,7 @@
-package dao;
+package flashcardsapi.model.dao;
 
-import exception.DaoException;
-import model.Deck;
+import flashcardsapi.exception.DaoException;
+import flashcardsapi.model.models.Deck;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;

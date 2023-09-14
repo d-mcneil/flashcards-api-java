@@ -1,7 +1,7 @@
 package flashcardsapi.daotests;
 
-import model.Deck;
-import model.User;
+import flashcardsapi.model.models.Deck;
+import flashcardsapi.model.models.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;

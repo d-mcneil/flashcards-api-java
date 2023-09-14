@@ -1,6 +1,6 @@
-package dao;
+package flashcardsapi.model.dao;
 
-import model.Card;
+import flashcardsapi.model.models.Card;
 
 import java.util.List;
 

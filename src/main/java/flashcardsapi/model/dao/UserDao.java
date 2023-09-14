@@ -1,6 +1,6 @@
-package dao;
+package flashcardsapi.model.dao;
 
-import model.User;
+import flashcardsapi.model.models.User;
 
 public interface UserDao {
     int getUserIdByUsername(String username);

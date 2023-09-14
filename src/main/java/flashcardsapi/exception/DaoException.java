@@ -1,4 +1,4 @@
-package exception;
+package flashcardsapi.exception;
 
 public class DaoException extends RuntimeException {
     public DaoException() {

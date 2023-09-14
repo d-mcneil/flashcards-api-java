@@ -1,6 +1,6 @@
-package dao;
+package flashcardsapi.model.dao;
 
-import model.PracticeSettings;
+import flashcardsapi.model.models.PracticeSettings;
 
 public interface PracticeSettingsDao {
     PracticeSettings getPracticeSettingsById(long settingsId);

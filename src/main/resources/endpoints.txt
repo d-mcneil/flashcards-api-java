@@ -1,28 +1,28 @@
 get decks
 create decks
-    /{userId}/decks
+    /decks
 
 get cards
 create cards
-    /{userId}/decks/{deckId}/cards
+    /decks/{deckId}/cards
 
 get settings
 update settings
-    /{userId}/decks/{deckId}/practice-settings
+    /decks/{deckId}/practice-settings
 
 update decks
 delete decks
-    /{userId}/decks/{deckId}
+    /decks/{deckId}
 
 update cards
 delete cards
-    /{userId}/decks/{deckId}/cards/{cardId}
+    decks/{deckId}/cards/{cardId}
 
 delete user
-    /{userId}
+    /users
 
 create decks
-    /{userId}/decks
+    decks
 
 registration and login (POST)
     /register

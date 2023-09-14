@@ -1,4 +1,4 @@
-package model;
+package flashcardsapi.model.models;
 
 import org.hibernate.validator.constraints.Length;
 

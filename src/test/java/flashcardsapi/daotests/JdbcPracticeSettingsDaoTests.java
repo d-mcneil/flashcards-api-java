@@ -1,6 +1,6 @@
 package flashcardsapi.daotests;
 
-import model.PracticeSettings;
+import flashcardsapi.model.models.PracticeSettings;
 import org.junit.Assert;
 import org.junit.Before;
 
