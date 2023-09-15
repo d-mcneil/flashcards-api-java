@@ -7,6 +7,8 @@ public interface UserDao {
 
     User getUserByUserId(int userId);
 
+    User getUserByUsername(String username);
+
     User updateUser(User user);
 
     int deleteUserById(int userId);

@@ -74,7 +74,7 @@ public class AuthenticationController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.createToken(authentication, false);
 
-        User user = userDao.getUserByUserId(userDao.getUserIdByUsername(userLoginDto.getUsername()));
+        User user = userDao.getUserByUsername(userLoginDto.getUsername());
         UserResponse userResponse = mapUserToResponse(user);
 
         return new LoginResponse(jwt, userResponse);

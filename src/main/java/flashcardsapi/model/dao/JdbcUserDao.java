@@ -9,7 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.postgresql.util.PGobject;
 
+import java.sql.SQLException;
 
 @Component
 public class JdbcUserDao implements UserDao {
@@ -25,7 +27,7 @@ public class JdbcUserDao implements UserDao {
         int userId = -1;
         String sql = "SELECT user_id FROM users WHERE username = ? AND is_user_active = true;";
         try {
-            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, username);
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, convertToCitext(username));
             if (sqlRowSet.next()) {
                 userId = sqlRowSet.getInt("user_id");
             }
@@ -60,6 +62,30 @@ public class JdbcUserDao implements UserDao {
         return user;
     }
 
+    @Override
+    public User getUserByUsername(String username){
+        User user = null;
+        String sql =
+                "SELECT " +
+                        "user_id, " +
+                        "username, " +
+                        "first_name, " +
+                        "last_name, " +
+                        "email, " +
+                        "joined_date, " +
+                        "is_user_active " +
+                        "FROM users " +
+                        "WHERE username = ? AND is_user_active = true;";
+        try {
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, convertToCitext(username));
+            if (sqlRowSet.next()) {
+                user = mapRowToUser(sqlRowSet);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
+        }
+        return user;
+    }
 
     @Override
     public User updateUser(User user) {
@@ -129,7 +155,7 @@ public class JdbcUserDao implements UserDao {
                     user.getEmail()
             );
             if (createdUserId == null) {
-                throw new DaoException("Error creating user");
+                throw new DaoException(ExceptionMessages.ERROR_STORING_USER_INFORMATION_MESSAGE);
             }
             Integer loginTableUserId = jdbcTemplate.queryForObject(
                     sqlCreateLogin,
@@ -138,7 +164,7 @@ public class JdbcUserDao implements UserDao {
                     hashedPassword
             );
             if (loginTableUserId == null) {
-                throw new DaoException("Error creating login");
+                throw new DaoException(ExceptionMessages.ERROR_STORING_LOGIN_INFORMATION_MESSAGE);
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
@@ -152,12 +178,13 @@ public class JdbcUserDao implements UserDao {
     @Override
     public String getHashedPasswordByUsername(String username) {
         String hashedPassword = null;
+
         String sql = "SELECT hashed_password " +
                 "FROM login " +
                 "JOIN users ON login.user_id = users.user_id " +
                 "WHERE username = ? AND is_user_active = true;";
         try {
-            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, username);
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, convertToCitext(username));
             if (sqlRowSet.next()) {
                 hashedPassword = sqlRowSet.getString("hashed_password");
             }
@@ -168,7 +195,7 @@ public class JdbcUserDao implements UserDao {
     }
 
 // ****************************************************************************************************************************************************************
-// ********************************* Convenience Method ***********************************************************************************************************
+// ********************************* Convenience Methods **********************************************************************************************************
 // ****************************************************************************************************************************************************************
 
     private User mapRowToUser(SqlRowSet sqlRowSet) {
@@ -182,5 +209,16 @@ public class JdbcUserDao implements UserDao {
         user.setUserActive(sqlRowSet.getBoolean("is_user_active"));
         user.setAuthorities("USER");
         return user;
+    }
+
+    private PGobject convertToCitext(String username) {
+        PGobject citextUsername = new PGobject();
+        citextUsername.setType("citext");
+        try {
+            citextUsername.setValue(username);
+        } catch (SQLException e) {
+            throw new DaoException(ExceptionMessages.ERROR_LOCATING_USERNAME_MESSAGE);
+        }
+        return citextUsername;
     }
 }

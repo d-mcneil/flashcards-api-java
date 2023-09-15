@@ -8,4 +8,5 @@ public class ExceptionMessages {
     public static final String USER_REGISTRATION_FAILED_MESSAGE = "User registration failed";
     public static final String ERROR_STORING_USER_INFORMATION_MESSAGE = "Error saving user information";
     public static final String ERROR_STORING_LOGIN_INFORMATION_MESSAGE = "Error saving login information";
+    public static final String ERROR_LOCATING_USERNAME_MESSAGE = "Error locating username";
 }

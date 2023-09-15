@@ -36,7 +36,7 @@ public abstract class BaseDaoTests {
     public void createUsers() {
         TEST_USER_1 = new User();
         TEST_USER_1.setUserId(1001);
-        TEST_USER_1.setUsername("username1");
+        TEST_USER_1.setUsername("usERnaME1"); // This intentionally has different casing than the test data... testing that citext works as expected
         TEST_USER_1.setFirstName("TestFirst1");
         TEST_USER_1.setLastName("TestLast1");
         TEST_USER_1.setEmail("testuser1@example.com");
@@ -45,7 +45,7 @@ public abstract class BaseDaoTests {
 
         TEST_USER_2 = new User();
         TEST_USER_2.setUserId(1002);
-        TEST_USER_2.setUsername("username2");
+        TEST_USER_2.setUsername("usERnaME2"); // This intentionally has different casing than the test data... testing that citext works as expected
         TEST_USER_2.setFirstName("TestFirst2");
         TEST_USER_2.setLastName("TestLast2");
         TEST_USER_2.setEmail("testuser2@example.com");
