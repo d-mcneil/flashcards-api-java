@@ -14,27 +14,17 @@ import java.util.Set;
 public class User {
 
     private int userId;
-// TODO: pretty sure these validation annotations weren't doing anything, because the info the user sends is actually UserRegistrationDto
 
-//    @NotNull
-//    @Length(max = 63)
     private String username;
 
-//    @NotNull
-//    @Length(max = 63)
     private String firstName;
 
-//    @NotNull
-//    @Length(max = 63)
     private String lastName;
 
-//    @NotNull
-//    @Length(max = 127)
     private String email;
 
     private Timestamp joinedDate;
 
-//    @NotNull
     private boolean isUserActive;
 
     private Set<Authority> authorities = new HashSet<>();
