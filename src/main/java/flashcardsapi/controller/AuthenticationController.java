@@ -56,7 +56,7 @@ public class AuthenticationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         if (newUser == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionMessages.USER_REGISTRATION_FAILED);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionMessages.USER_REGISTRATION_FAILED_MESSAGE);
         }
 
         UserLoginDto userLoginDto = new UserLoginDto();

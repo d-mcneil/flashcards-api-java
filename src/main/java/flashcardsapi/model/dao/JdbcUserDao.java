@@ -106,11 +106,11 @@ public class JdbcUserDao implements UserDao {
 // ****************************************************************************************************************************************************************
 // ********************************* Login Methods ****************************************************************************************************************
 // ****************************************************************************************************************************************************************
-
-    @Override
     @Transactional
+    @Override
     public User createUser(User user, String hashedPassword) {
-        User newUser;
+        Integer createdUserId;
+
         String sqlCreateUser =
                 "INSERT INTO users (username, first_name, last_name, email) " +
                 "VALUES (?, ?, ?, ?) " +
@@ -120,7 +120,7 @@ public class JdbcUserDao implements UserDao {
                 "VALUES (?, ?) " +
                 "RETURNING user_id;";
         try {
-            Integer userId = jdbcTemplate.queryForObject(
+            createdUserId = jdbcTemplate.queryForObject(
                     sqlCreateUser,
                     Integer.class,
                     user.getUsername(),
@@ -128,25 +128,25 @@ public class JdbcUserDao implements UserDao {
                     user.getLastName(),
                     user.getEmail()
             );
-            if (userId == null) {
+            if (createdUserId == null) {
                 throw new DaoException("Error creating user");
             }
-            userId = jdbcTemplate.queryForObject(
+            Integer loginTableUserId = jdbcTemplate.queryForObject(
                     sqlCreateLogin,
                     Integer.class,
-                    userId,
+                    createdUserId,
                     hashedPassword
             );
-            if (userId == null) {
+            if (loginTableUserId == null) {
                 throw new DaoException("Error creating login");
             }
-            newUser = getUserByUserId(userId);
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException(ExceptionMessages.CANNOT_GET_JDBC_CONNECTION_EXCEPTION_MESSAGE, e);
         } catch (DataIntegrityViolationException e) {
             throw new DaoException(ExceptionMessages.DATA_INTEGRITY_VIOLATION_EXCEPTION_MESSAGE, e);
         }
-        return newUser;
+        
+        return getUserByUserId(createdUserId);
     }
 
     @Override
