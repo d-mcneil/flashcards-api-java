@@ -1,8 +1,8 @@
 package flashcardsapi.controller;
 
-import flashcardsapi.view.dto.UserLoginDto;
+import flashcardsapi.view.dto.UserSignInDto;
 import flashcardsapi.view.dto.UserRegistrationDto;
-import flashcardsapi.view.response.LoginResponse;
+import flashcardsapi.view.response.SignInResponse;
 import flashcardsapi.exception.DaoException;
 import flashcardsapi.exception.exceptionmessages.ExceptionMessages;
 import flashcardsapi.model.models.User;
@@ -33,13 +33,13 @@ public class AuthenticationController {
     }
 
     @RequestMapping(path = "/sign-in", method = RequestMethod.POST)
-    public LoginResponse signIn(@Valid @RequestBody UserLoginDto userLoginDto) {
-        return handleLogin(userLoginDto);
+    public SignInResponse signIn(@Valid @RequestBody UserSignInDto userSignInDto) {
+        return handleSignIn(userSignInDto);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path = "/register", method = RequestMethod.POST)
-    public LoginResponse register(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
+    public SignInResponse register(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
 
         boolean isUsernameAlreadyInUse = userDao.getUserIdByUsername(userRegistrationDto.getUsername()) != -1;
         if (isUsernameAlreadyInUse) {
@@ -59,29 +59,30 @@ public class AuthenticationController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionMessages.USER_REGISTRATION_FAILED_MESSAGE);
         }
 
-        UserLoginDto userLoginDto = new UserLoginDto();
-        userLoginDto.setUsername(newUser.getUsername());
-        userLoginDto.setPassword(userRegistrationDto.getPassword());
+        UserSignInDto userSignInDto = new UserSignInDto();
+        userSignInDto.setUsername(newUser.getUsername());
+        userSignInDto.setPassword(userRegistrationDto.getPassword());
 
-        return handleLogin(userLoginDto);
+        return handleSignIn(userSignInDto);
     }
 
-    private LoginResponse handleLogin(UserLoginDto userLoginDto) {
+    private SignInResponse handleSignIn(UserSignInDto userSignInDto) {
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(userLoginDto.getUsername(), userLoginDto.getPassword());
+                new UsernamePasswordAuthenticationToken(userSignInDto.getUsername(), userSignInDto.getPassword());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.createToken(authentication, false);
 
-        User user = userDao.getUserByUsername(userLoginDto.getUsername());
+        User user = userDao.getUserByUsername(userSignInDto.getUsername());
         UserResponse userResponse = mapUserToResponse(user);
 
-        return new LoginResponse(jwt, userResponse);
+        return new SignInResponse(jwt, userResponse);
     }
 
     private UserResponse mapUserToResponse(User user) {
         UserResponse userResponse = new UserResponse();
+        userResponse.setUserId(user.getUserId());
         userResponse.setFirstName(user.getFirstName());
         userResponse.setLastName(user.getLastName());
         userResponse.setUsername(user.getUsername());

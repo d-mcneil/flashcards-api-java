@@ -1,10 +1,10 @@
 package flashcardsapi.view.response;
 
-public class LoginResponse {
+public class SignInResponse {
     private final String token;
     private final UserResponse userResponse;
 
-    public LoginResponse(String token, UserResponse userResponse) {
+    public SignInResponse(String token, UserResponse userResponse) {
         this.token = token;
         this.userResponse = userResponse;
     }

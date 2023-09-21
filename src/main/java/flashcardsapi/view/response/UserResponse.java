@@ -4,11 +4,20 @@ import java.sql.Timestamp;
 
 public class UserResponse {
 
+    private int userId;
     private String username;
     private String firstName;
     private String lastName;
     private String email;
     private Timestamp joinedDate;
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
     public String getUsername() {
         return username;
